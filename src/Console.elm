@@ -140,10 +140,10 @@ fontSize =
 
 
 basic :
-    { init : ( model, Cmd msg )
-    , process : Log -> model -> ( model, Cmd msg )
+    { init : ( model, Cmd () )
+    , process : Log -> model -> ( model, Cmd () )
     }
-    -> Program () (Model model) (Msg msg)
+    -> Program () (Model model) (Msg ())
 basic { init, process } =
     Browser.document
         { init =
