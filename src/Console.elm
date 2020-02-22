@@ -37,11 +37,20 @@ type Log
 -- MODEL
 
 
-type alias Model a =
+type alias Model model =
     { logs : List Log
     , currentInput : String
-    , model : a
+    , model : model
     , time : Int
+    }
+
+
+init_ : model -> Model model
+init_ model =
+    { logs = []
+    , currentInput = ""
+    , model = model
+    , time = 0
     }
 
 
@@ -152,7 +161,7 @@ basic { init, process } =
                     ( model, cmd ) =
                         init
                 in
-                ( Model [] "" model 0
+                ( init_ model
                 , cmd
                 )
         , update = update_ process <| \_ model -> ( model, Cmd.none )
@@ -176,7 +185,7 @@ advanced { init, process, update, subscriptions } =
                     ( model, cmd ) =
                         init flags
                 in
-                ( Model [] "" model 0
+                ( init_ model
                 , cmd
                 )
         , update = update_ process update
