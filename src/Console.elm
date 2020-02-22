@@ -213,7 +213,7 @@ update_ process update msg model =
                     process log_ model.model
             in
             ( { model
-                | logs = List.take 1000 <| log_ :: model.logs
+                | logs = List.take 500 <| log_ :: model.logs
                 , model = newModel
                 , currentInput = ""
               }
