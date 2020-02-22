@@ -1,29 +1,17 @@
 module StressTest exposing (..)
 
-import Console as C exposing (Cmd, Log(..))
+import Console exposing (Log(..), basic, log)
 
 
-main : Program () (C.Model Model) (C.Msg msg)
 main =
-    C.basic
-        { init = ( 0, C.log "1" )
-        , process = process
+    basic
+        { init = ( 0, log "1" )
+        , process =
+            \log_ model ->
+                case log_ of
+                    In _ ->
+                        ( model, Cmd.none )
+
+                    Out _ ->
+                        ( model + 1, log <| String.fromInt <| model + 2 )
         }
-
-
-type alias Model =
-    Int
-
-
-process : Log -> Model -> ( Model, Cmd msg )
-process log model =
-    case log of
-        In _ ->
-            ( model, Cmd.none )
-
-        Out _ ->
-            let
-                newModel =
-                    model + 1
-            in
-            ( newModel, C.log <| String.fromInt <| newModel + 1 )
