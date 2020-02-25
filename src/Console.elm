@@ -51,13 +51,7 @@ basic { init, process } =
     Browser.document
         { init =
             \_ ->
-                let
-                    ( model, cmd ) =
-                        init
-                in
-                ( init_ model
-                , cmd
-                )
+                Tuple.mapFirst init_ init
         , update = update_ process <| \_ model -> ( model, Cmd.none )
         , subscriptions = \_ -> BE.onResize Resize
         , view = view
@@ -75,13 +69,7 @@ advanced { init, process, update, subscriptions } =
     Browser.document
         { init =
             \flags ->
-                let
-                    ( model, cmd ) =
-                        init flags
-                in
-                ( init_ model
-                , cmd
-                )
+                Tuple.mapFirst init_ <| init flags
         , update = update_ process update
         , subscriptions =
             \model ->
