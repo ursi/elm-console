@@ -1,11 +1,7 @@
-module Console.Random exposing (..)
+module Console.Random exposing (generate, int)
 
 import Console.Internal exposing (Cmd, Msg(..))
 import Random exposing (Generator)
-
-
-todo =
-    Debug.todo ""
 
 
 generate : (a -> msg) -> Generator a -> Cmd log msg

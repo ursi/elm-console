@@ -1,4 +1,13 @@
-module Console exposing (..)
+module Console exposing
+    ( Cmd
+    , Log(..)
+    , Model
+    , Msg
+    , advanced
+    , basic
+    , batch
+    , log
+    )
 
 import Browser exposing (Document)
 import Browser.Dom as Dom
@@ -16,8 +25,8 @@ import Task
 import Time
 
 
-todo =
-    Debug.todo ""
+type alias Model model =
+    Console.Internal.Model Log model
 
 
 type alias Msg msg =
@@ -33,16 +42,69 @@ type Log
     | Out String
 
 
-
--- MODEL
-
-
-type alias Model model =
-    { logs : List Log
-    , currentInput : String
-    , model : model
-    , time : Int
+basic :
+    { init : ( model, Cmd () )
+    , process : Log -> model -> ( model, Cmd () )
     }
+    -> Program () (Model model) (Msg ())
+basic { init, process } =
+    Browser.document
+        { init =
+            \_ ->
+                let
+                    ( model, cmd ) =
+                        init
+                in
+                ( init_ model
+                , cmd
+                )
+        , update = update_ process <| \_ model -> ( model, Cmd.none )
+        , subscriptions = \_ -> BE.onResize Resize
+        , view = view
+        }
+
+
+advanced :
+    { init : flags -> ( model, Cmd msg )
+    , process : Log -> model -> ( model, Cmd msg )
+    , update : msg -> model -> ( model, Cmd msg )
+    , subscriptions : model -> Sub msg
+    }
+    -> Program flags (Model model) (Msg msg)
+advanced { init, process, update, subscriptions } =
+    Browser.document
+        { init =
+            \flags ->
+                let
+                    ( model, cmd ) =
+                        init flags
+                in
+                ( init_ model
+                , cmd
+                )
+        , update = update_ process update
+        , subscriptions =
+            \model ->
+                Sub.batch
+                    [ Sub.map UpdateMsg <| subscriptions model.model
+                    , BE.onResize Resize
+                    ]
+        , view = view
+        }
+
+
+log : String -> Cmd msg
+log str =
+    Task.perform NewLog <| Task.succeed <| Out str
+
+
+batch : List String -> Cmd msg
+batch logs =
+    log <| String.join "\n" logs
+
+
+
+--INTERNAL
 
 
 init_ : model -> Model model
@@ -52,6 +114,69 @@ init_ model =
     , model = model
     , time = 0
     }
+
+
+
+-- UPDATE
+
+
+update_ :
+    (Log -> model -> ( model, Cmd msg ))
+    -> (msg -> model -> ( model, Cmd msg ))
+    -> Msg msg
+    -> Model model
+    -> ( Model model, Cmd msg )
+update_ process update msg model =
+    case msg of
+        NewLog log_ ->
+            let
+                ( newModel, cmd ) =
+                    process log_ model.model
+            in
+            ( { model
+                | logs = List.take 500 <| log_ :: model.logs
+                , model = newModel
+                , currentInput = ""
+              }
+            , -- all this nonsense is required to log the messages in real time as opposed to waiting for the entire computation finish
+              Time.now
+                |> Task.andThen
+                    (\time ->
+                        if Time.posixToMillis time - model.time > 1000 // 30 then
+                            Process.sleep 0
+                                |> Task.map (\_ -> ( Just time, cmd ))
+
+                        else
+                            Task.succeed ( Nothing, cmd )
+                    )
+                |> Task.perform RunCmd
+            )
+
+        InputChanged str ->
+            ( { model | currentInput = str }, Cmd.none )
+
+        UpdateMsg msg_ ->
+            let
+                ( newModel, cmd ) =
+                    update msg_ model.model
+            in
+            ( { model | model = newModel }, cmd )
+
+        RunCmd ( time, cmd ) ->
+            case time of
+                Just posix ->
+                    ( { model | time = Time.posixToMillis posix }
+                    , Cmd.batch [ cmd, scrollToBottom ]
+                    )
+
+                Nothing ->
+                    ( model, cmd )
+
+        Resize _ _ ->
+            ( model, scrollToBottom )
+
+        NoOp ->
+            ( model, Cmd.none )
 
 
 
@@ -148,116 +273,6 @@ fontSize =
     18
 
 
-basic :
-    { init : ( model, Cmd () )
-    , process : Log -> model -> ( model, Cmd () )
-    }
-    -> Program () (Model model) (Msg ())
-basic { init, process } =
-    Browser.document
-        { init =
-            \_ ->
-                let
-                    ( model, cmd ) =
-                        init
-                in
-                ( init_ model
-                , cmd
-                )
-        , update = update_ process <| \_ model -> ( model, Cmd.none )
-        , subscriptions = \_ -> BE.onResize Resize
-        , view = view
-        }
-
-
-advanced :
-    { init : flags -> ( model, Cmd msg )
-    , process : Log -> model -> ( model, Cmd msg )
-    , update : msg -> model -> ( model, Cmd msg )
-    , subscriptions : model -> Sub msg
-    }
-    -> Program flags (Model model) (Msg msg)
-advanced { init, process, update, subscriptions } =
-    Browser.document
-        { init =
-            \flags ->
-                let
-                    ( model, cmd ) =
-                        init flags
-                in
-                ( init_ model
-                , cmd
-                )
-        , update = update_ process update
-        , subscriptions =
-            \model ->
-                Sub.batch
-                    [ Sub.map UpdateMsg <| subscriptions model.model
-                    , BE.onResize Resize
-                    ]
-        , view = view
-        }
-
-
-update_ :
-    (Log -> model -> ( model, Cmd msg ))
-    -> (msg -> model -> ( model, Cmd msg ))
-    -> Msg msg
-    -> Model model
-    -> ( Model model, Cmd msg )
-update_ process update msg model =
-    case msg of
-        NewLog log_ ->
-            let
-                ( newModel, cmd ) =
-                    process log_ model.model
-            in
-            ( { model
-                | logs = List.take 500 <| log_ :: model.logs
-                , model = newModel
-                , currentInput = ""
-              }
-            , -- all this nonsense is required to log the messages in real time as opposed to waiting for the entire computation finish
-              Time.now
-                |> Task.andThen
-                    (\time ->
-                        if Time.posixToMillis time - model.time > 1000 // 30 then
-                            Process.sleep 0
-                                |> Task.map (\_ -> ( Just time, cmd ))
-
-                        else
-                            Task.succeed ( Nothing, cmd )
-                    )
-                |> Task.perform RunCmd
-            )
-
-        InputChanged str ->
-            ( { model | currentInput = str }, Cmd.none )
-
-        UpdateMsg msg_ ->
-            let
-                ( newModel, cmd ) =
-                    update msg_ model.model
-            in
-            ( { model | model = newModel }, cmd )
-
-        RunCmd ( time, cmd ) ->
-            case time of
-                Just posix ->
-                    ( { model | time = Time.posixToMillis posix }
-                    , Cmd.batch [ cmd, scrollToBottom ]
-                    )
-
-                Nothing ->
-                    ( model, cmd )
-
-        Resize _ _ ->
-            ( model, scrollToBottom )
-
-        NoOp ->
-            ( model, Cmd.none )
-
-
 scrollToBottom : Cmd msg
 scrollToBottom =
     Dom.getViewport
@@ -266,11 +281,6 @@ scrollToBottom =
                 Dom.setViewport 0 scene.height
             )
         |> Task.perform (\_ -> NoOp)
-
-
-log : String -> Cmd msg
-log str =
-    Task.perform NewLog <| Task.succeed <| Out str
 
 
 logToString : Log -> String
@@ -289,8 +299,3 @@ logToString log_ =
 
     else
         logStr
-
-
-batch : List String -> Cmd msg
-batch logs =
-    log <| String.join "\n" logs

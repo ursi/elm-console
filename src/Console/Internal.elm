@@ -1,6 +1,14 @@
-module Console.Internal exposing (..)
+module Console.Internal exposing (Cmd, Model, Msg(..))
 
 import Time exposing (Posix)
+
+
+type alias Model log model =
+    { logs : List log
+    , currentInput : String
+    , model : model
+    , time : Int
+    }
 
 
 type Msg log msg
