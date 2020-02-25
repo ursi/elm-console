@@ -1,6 +1,5 @@
 module GuessNumber exposing (..)
 
-import Browser.Events as BE
 import Console as C exposing (Cmd, Log(..))
 import Console.Random as Random
 
@@ -117,6 +116,6 @@ getNumber =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 

@@ -16,7 +16,7 @@ import Console.Internal exposing (Cmd, Msg(..))
 import Css as C exposing (Color, Style)
 import Css.Colors exposing (..)
 import Css.Global as CG
-import Html.Styled as H exposing (Html)
+import Html.Styled as H
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Json.Decode as D
@@ -237,8 +237,6 @@ view model =
                 [ C.backgroundColor background
                 , C.color foreground
                 , font
-
-                --, C.whiteSpace C.preWrap
                 ]
             , CG.each [ CG.pre, CG.input ]
                 [ C.margin C.zero

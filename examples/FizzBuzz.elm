@@ -1,8 +1,6 @@
 module FizzBuzz exposing (..)
 
-import Browser.Events as BE
 import Console as C exposing (Cmd, Log(..))
-import Console.Random as Random
 
 
 main : Program () (C.Model Model) (C.Msg ())
@@ -31,7 +29,7 @@ process log model =
     case log of
         In str ->
             case model.total of
-                Just total ->
+                Just _ ->
                     ( model, Cmd.none )
 
                 Nothing ->

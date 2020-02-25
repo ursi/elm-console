@@ -9,5 +9,6 @@ generate toMsg generator =
     Random.generate (\a -> UpdateMsg <| toMsg a) generator
 
 
+int : Int -> Int -> Generator Int
 int =
     Random.int
