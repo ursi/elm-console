@@ -1,7 +1,11 @@
-module Console.Random exposing (generate, int)
+module Console.Random exposing (Generator, generate, int)
 
 import Console.Internal exposing (Cmd, Msg(..))
-import Random as R exposing (Generator)
+import Random as R
+
+
+type alias Generator a =
+    R.Generator a
 
 
 generate : (a -> msg) -> Generator a -> Cmd log msg
