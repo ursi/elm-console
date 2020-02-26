@@ -1,0 +1,7 @@
+- Create console versions of every relevant `elm` package that uses commands
+  - random
+  - core
+  - file
+  - http
+- Allow outputting in color
+- Add the ability to configure the look of the console
