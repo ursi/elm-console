@@ -5,3 +5,4 @@
   - http
 - Allow outputting in color
 - Add the ability to configure the look of the console
+- Create `README`
