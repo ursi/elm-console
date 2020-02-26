@@ -126,7 +126,7 @@ update_ process update msg model =
                 , model = newModel
                 , currentInput = ""
               }
-            , -- all this nonsense is required to log the messages in real time as opposed to waiting for the entire computation finish
+            , -- all this nonsense is required to log the messages in real time as opposed to waiting for the entire computation to finish
               Time.now
                 |> Task.andThen
                     (\time ->
