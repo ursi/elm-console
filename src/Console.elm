@@ -1,7 +1,7 @@
 module Console exposing
     ( Cmd
+    , Console
     , Log(..)
-    , Model
     , Msg
     , advanced
     , basic
@@ -25,7 +25,7 @@ import Task
 import Time
 
 
-type alias Model model =
+type alias Console model =
     Console.Internal.Model Log model
 
 
@@ -46,7 +46,7 @@ basic :
     { init : ( model, Cmd () )
     , process : Log -> model -> ( model, Cmd () )
     }
-    -> Program () (Model model) (Msg ())
+    -> Program () (Console model) (Msg ())
 basic { init, process } =
     Browser.document
         { init =
@@ -64,7 +64,7 @@ advanced :
     , update : msg -> model -> ( model, Cmd msg )
     , subscriptions : model -> Sub msg
     }
-    -> Program flags (Model model) (Msg msg)
+    -> Program flags (Console model) (Msg msg)
 advanced { init, process, update, subscriptions } =
     Browser.document
         { init =
@@ -95,7 +95,7 @@ batch logs =
 --INTERNAL
 
 
-init_ : model -> Model model
+init_ : model -> Console model
 init_ model =
     { logs = []
     , currentInput = ""
@@ -112,8 +112,8 @@ update_ :
     (Log -> model -> ( model, Cmd msg ))
     -> (msg -> model -> ( model, Cmd msg ))
     -> Msg msg
-    -> Model model
-    -> ( Model model, Cmd msg )
+    -> Console model
+    -> ( Console model, Cmd msg )
 update_ process update msg model =
     case msg of
         NewLog log_ ->
@@ -171,7 +171,7 @@ update_ process update msg model =
 -- VIEW
 
 
-view : Model a -> Document (Msg msg)
+view : Console a -> Document (Msg msg)
 view model =
     { title = "Elm Console"
     , body =

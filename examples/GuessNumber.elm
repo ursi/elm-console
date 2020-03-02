@@ -1,10 +1,10 @@
 module GuessNumber exposing (..)
 
-import Console as C exposing (Cmd, Log(..))
+import Console as C exposing (Cmd, Console, Log(..))
 import Console.Random as Random
 
 
-main : Program () (C.Model Model) (C.Msg Msg)
+main : Program () (Console Model) (C.Msg Msg)
 main =
     C.advanced
         { init = init
@@ -118,4 +118,3 @@ getNumber =
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.none
-

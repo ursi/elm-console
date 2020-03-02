@@ -1,9 +1,9 @@
 module FizzBuzz exposing (..)
 
-import Console as C exposing (Cmd, Log(..))
+import Console as C exposing (Cmd, Console, Log(..))
 
 
-main : Program () (C.Model Model) (C.Msg ())
+main : Program () (Console Model) (C.Msg ())
 main =
     C.basic
         { init = init
