@@ -18,8 +18,7 @@ import Console.Internal exposing (Cmd, Msg(..))
 import Css as C exposing (Color, Style)
 import Css.Colors exposing (..)
 import Css.Global as CG
-import Html
-import Html.Styled as H exposing (Html)
+import Html.Styled as H
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Json.Decode as D
@@ -41,7 +40,7 @@ type alias Cmd msg =
 
 
 type alias Print =
-    Html.Html (Msg ())
+    Program () (Console ()) (Msg ())
 
 
 type Log
@@ -51,11 +50,15 @@ type Log
 
 print : String -> Print
 print str =
-    let
-        newConsole =
-            init_ ()
-    in
-    Html.div [] <| viewBody False { newConsole | logs = [ Out str ] }
+    Browser.document
+        { init = \_ -> ( init_ (), log str )
+        , update =
+            update_
+                (\_ _ -> ( (), Cmd.none ))
+                (\_ _ -> ( (), Cmd.none ))
+        , subscriptions = \_ -> BE.onResize Resize
+        , view = view False
+        }
 
 
 basic :
@@ -65,9 +68,7 @@ basic :
     -> Program () (Console model) (Msg ())
 basic { init, process } =
     Browser.document
-        { init =
-            \_ ->
-                Tuple.mapFirst init_ init
+        { init = \_ -> Tuple.mapFirst init_ init
         , update = update_ process <| \_ model -> ( model, Cmd.none )
         , subscriptions = \_ -> BE.onResize Resize
         , view = view True
@@ -190,77 +191,73 @@ update_ process update msg model =
 view : Bool -> Console a -> Document (Msg msg)
 view acceptInput model =
     { title = "Elm Console"
-    , body = viewBody acceptInput model
+    , body =
+        [ H.div []
+            (model.logs
+                |> List.reverse
+                |> List.map
+                    (logToString
+                        >> H.text
+                        >> List.singleton
+                        >> H.pre []
+                    )
+            )
+        ]
+            ++ (if acceptInput then
+                    [ H.div [ A.css [ C.displayFlex ] ]
+                        [ H.div
+                            [ A.css
+                                [ font
+                                , C.position C.absolute
+                                ]
+                            ]
+                            [ H.text ">" ]
+                        , H.input
+                            [ A.value model.currentInput
+                            , A.autofocus True
+                            , A.css
+                                [ C.backgroundColor background
+                                , C.color foreground
+                                , font
+                                , C.borderStyle C.none
+                                , C.padding C.zero
+                                , C.flex <| C.int 1
+                                , C.focus [ C.outline C.none ]
+                                ]
+                            , E.onInput InputChanged
+                            , E.on "keydown" <|
+                                (D.field "key" D.string
+                                    |> D.andThen
+                                        (\key ->
+                                            if key == "Enter" then
+                                                D.succeed <| NewLog <| In model.currentInput
+
+                                            else
+                                                D.fail ""
+                                        )
+                                )
+                            ]
+                            []
+                        ]
+                    ]
+
+                else
+                    []
+               )
+            ++ [ CG.global
+                    [ CG.body
+                        [ C.backgroundColor background
+                        , C.color foreground
+                        , font
+                        ]
+                    , CG.each [ CG.pre, CG.input ]
+                        [ C.margin C.zero
+                        , C.marginLeft <| C.px <| fontSize * 0.75
+                        ]
+                    ]
+               ]
+            |> List.map H.toUnstyled
     }
-
-
-viewBody : Bool -> Console a -> List (Html.Html (Msg msg))
-viewBody acceptInput model =
-    [ H.div []
-        (model.logs
-            |> List.reverse
-            |> List.map
-                (logToString
-                    >> H.text
-                    >> List.singleton
-                    >> H.pre []
-                )
-        )
-    ]
-        ++ (if acceptInput then
-                [ H.div [ A.css [ C.displayFlex ] ]
-                    [ H.div
-                        [ A.css
-                            [ font
-                            , C.position C.absolute
-                            ]
-                        ]
-                        [ H.text ">" ]
-                    , H.input
-                        [ A.value model.currentInput
-                        , A.autofocus True
-                        , A.css
-                            [ C.backgroundColor background
-                            , C.color foreground
-                            , font
-                            , C.borderStyle C.none
-                            , C.padding C.zero
-                            , C.flex <| C.int 1
-                            , C.focus [ C.outline C.none ]
-                            ]
-                        , E.onInput InputChanged
-                        , E.on "keydown" <|
-                            (D.field "key" D.string
-                                |> D.andThen
-                                    (\key ->
-                                        if key == "Enter" then
-                                            D.succeed <| NewLog <| In model.currentInput
-
-                                        else
-                                            D.fail ""
-                                    )
-                            )
-                        ]
-                        []
-                    ]
-                ]
-
-            else
-                []
-           )
-        ++ [ CG.global
-                [ CG.body
-                    [ C.backgroundColor background
-                    , C.color foreground
-                    , font
-                    ]
-                , CG.each [ CG.pre, CG.input ]
-                    [ C.margin C.zero
-                    , C.marginLeft <| C.px <| fontSize * 0.75
-                    ]
-                ]
-           ]
-        |> List.map H.toUnstyled
 
 
 background : Color
