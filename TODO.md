@@ -1,5 +1,4 @@
 - Create console versions of every relevant `elm` package that uses commands
-  - random
   - core
   - file
   - http
