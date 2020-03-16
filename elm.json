@@ -3,7 +3,7 @@
     "name": "ursi/elm-console",
     "summary": "Run Elm in an HTML based console",
     "license": "BSD-3-Clause",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "exposed-modules": [
         "Console",
         "Console.Random"
