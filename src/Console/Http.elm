@@ -40,6 +40,7 @@ module Console.Http exposing
 
 import Bytes exposing (Bytes)
 import Bytes.Decode
+import Console exposing (Log)
 import Console.Internal exposing (Cmd, Msg(..))
 import Console.Task exposing (Task)
 import Dict exposing (Dict)
@@ -51,9 +52,9 @@ import Json.Encode as Encode
 
 get :
     { url : String
-    , expect : Expect log msg
+    , expect : Expect msg
     }
-    -> Cmd log msg
+    -> Cmd Log msg
 get =
     H.get
 
@@ -61,9 +62,9 @@ get =
 post :
     { url : String
     , body : Body
-    , expect : Expect log msg
+    , expect : Expect msg
     }
-    -> Cmd log msg
+    -> Cmd Log msg
 post =
     H.post
 
@@ -73,11 +74,11 @@ request :
     , headers : List Header
     , url : String
     , body : Body
-    , expect : Expect log msg
+    , expect : Expect msg
     , timeout : Maybe Float
     , tracker : Maybe String
     }
-    -> Cmd log msg
+    -> Cmd Log msg
 request =
     H.request
 
@@ -144,26 +145,26 @@ bytesPart =
     H.bytesPart
 
 
-type alias Expect log msg =
-    H.Expect (Msg log msg)
+type alias Expect msg =
+    H.Expect (Msg Log msg)
 
 
-expectString : (Result Error String -> msg) -> Expect log msg
+expectString : (Result Error String -> msg) -> Expect msg
 expectString toMsg =
     H.expectString <| UpdateMsg << toMsg << result
 
 
-expectJson : (Result Error a -> msg) -> Json.Decode.Decoder a -> Expect log msg
+expectJson : (Result Error a -> msg) -> Json.Decode.Decoder a -> Expect msg
 expectJson toMsg =
     H.expectJson <| UpdateMsg << toMsg << result
 
 
-expectBytes : (Result Error a -> msg) -> Bytes.Decode.Decoder a -> Expect log msg
+expectBytes : (Result Error a -> msg) -> Bytes.Decode.Decoder a -> Expect msg
 expectBytes toMsg =
     H.expectBytes <| UpdateMsg << toMsg << result
 
 
-expectWhatever : (Result Error () -> msg) -> Expect log msg
+expectWhatever : (Result Error () -> msg) -> Expect msg
 expectWhatever toMsg =
     H.expectWhatever <| UpdateMsg << toMsg << result
 
@@ -205,7 +206,7 @@ toError error =
             BadBody body
 
 
-track : String -> (Progress -> msg) -> Sub (Msg log msg)
+track : String -> (Progress -> msg) -> Sub (Msg Log msg)
 track string toMsg =
     H.track string <| UpdateMsg << toMsg << toProgress
 
@@ -245,7 +246,7 @@ fractionReceived =
     H.fractionReceived
 
 
-cancel : String -> Cmd log msg
+cancel : String -> Cmd Log msg
 cancel =
     H.cancel
 
@@ -255,21 +256,21 @@ riskyRequest :
     , headers : List Header
     , url : String
     , body : Body
-    , expect : Expect log msg
+    , expect : Expect msg
     , timeout : Maybe Float
     , tracker : Maybe String
     }
-    -> Cmd log msg
+    -> Cmd Log msg
 riskyRequest =
     H.riskyRequest
 
 
-expectStringResponse : (Result x a -> msg) -> (Response String -> Result x a) -> Expect log msg
+expectStringResponse : (Result x a -> msg) -> (Response String -> Result x a) -> Expect msg
 expectStringResponse toMsg toResult =
     H.expectStringResponse (UpdateMsg << toMsg) <| toResult << toResponse
 
 
-expectBytesResponse : (Result x a -> msg) -> (Response Bytes -> Result x a) -> Expect log msg
+expectBytesResponse : (Result x a -> msg) -> (Response Bytes -> Result x a) -> Expect msg
 expectBytesResponse toMsg toResult =
     H.expectBytesResponse (UpdateMsg << toMsg) <| toResult << toResponse
 
