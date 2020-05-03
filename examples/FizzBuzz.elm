@@ -19,7 +19,7 @@ type alias Model =
 
 init : ( Model, Cmd () )
 init =
-    ( Model 0 Nothing
+    ( Model 1 Nothing
     , C.log "How many numbers should I play FizzBuzz with?"
     )
 
@@ -36,7 +36,7 @@ process log model =
                     case String.toInt str of
                         Just n ->
                             ( { model | total = Just n }
-                            , C.log <| fizzBuzz 1
+                            , C.log <| fizzBuzz model.current
                             )
 
                         Nothing ->
@@ -49,13 +49,13 @@ process log model =
                         newCurrent =
                             model.current + 1
                     in
-                    if newCurrent == total then
-                        ( model, Cmd.none )
+                    if newCurrent <= total then
+                        ( { model | current = newCurrent }
+                        , C.log <| fizzBuzz newCurrent
+                        )
 
                     else
-                        ( { model | current = newCurrent }
-                        , C.log <| fizzBuzz <| newCurrent + 1
-                        )
+                        ( model, Cmd.none )
 
                 Nothing ->
                     ( model, Cmd.none )
